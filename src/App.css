@@ -1,0 +1,2 @@
+body { font-family: sans-serif; }
+@media (max-width: 600px) { .MuiGrid-item { width: 100%; } }  /* Basic responsive */
