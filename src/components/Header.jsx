@@ -12,6 +12,7 @@ import {
   Menu,
   MenuItem
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { Menu as MenuIcon, Facebook, Twitter, Instagram, LinkedIn } from '@mui/icons-material';
 import { AuthModal } from './AuthModal';
 import { isAuthenticated, logoutUser, getCurrentUser, getUserId } from '../api.jsx';
@@ -20,6 +21,7 @@ import logo from '../assets/images/logo.svg';
 export const Header = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [user, setUser] = useState(null);
@@ -139,6 +141,7 @@ export const Header = () => {
               >
                 CONTACT
               </Button>
+              
             </Box>
           )}
 
@@ -165,6 +168,21 @@ export const Header = () => {
             {/* Auth Buttons / User Menu */}
             {user ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Button 
+                  variant="outlined"
+                  onClick={() => navigate('/rental-history')}
+                  sx={{ 
+                    borderColor: '#ff0000',
+                    color: '#ff0000',
+                    fontFamily: 'Consolas, monospace',
+                    height: 32,
+                    px: 1.5,
+                    mr: 1,
+                    '&:hover': { borderColor: '#cc0000', bgcolor: 'rgba(255,0,0,0.1)' }
+                  }}
+                >
+                  RENTAL HISTORY
+                </Button>
                 <Typography 
                   variant="body2" 
                   sx={{ 
@@ -342,6 +360,20 @@ export const Header = () => {
                 }}
               >
                 CONTACT
+              </Button>
+              <Button 
+                variant="outlined"
+                onClick={() => { setMobileMenuOpen(false); navigate('/rental-history'); }}
+                fullWidth
+                sx={{ 
+                  borderColor: '#ff0000',
+                  color: '#ff0000',
+                  fontFamily: 'Consolas, monospace',
+                  justifyContent: 'flex-start',
+                  '&:hover': { borderColor: '#cc0000', bgcolor: 'rgba(255,0,0,0.1)' }
+                }}
+              >
+                RENTAL HISTORY
               </Button>
             </Box>
           </Box>

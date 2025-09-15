@@ -446,6 +446,30 @@ export const getRentalDetails = async (rentalId) => {
 };
 
 /**
+ * Get rentals by user ID
+ * @param {number} userId - User ID
+ * @returns {Promise<Array>} List of rentals
+ */
+export const getUserRentals = async (userId) => {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+    const response = await fetchWithTimeout(`${API_BASE_URL}/rentals/user/${userId}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Failed to fetch user rentals:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw new Error(`Failed to fetch user rentals: ${error.message}`);
+  }
+};
+
+/**
  * Return rental vehicle
  * @param {number} rentalId - Rental ID
  * @returns {Promise<Object>} Return response

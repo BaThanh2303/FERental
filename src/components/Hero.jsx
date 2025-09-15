@@ -6,6 +6,7 @@ import { getAllStations, getVehiclesInStation } from '../api.jsx';
 export const Hero = () => {
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const userMarkerRef = useRef(null);
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedVehicleIndex, setSelectedVehicleIndex] = useState(0);
   const [stations, setStations] = useState([]);
@@ -131,6 +132,42 @@ export const Hero = () => {
 
           console.log('Map instance created successfully');
           mapInstanceRef.current = mapInstance;
+
+          // After map is ready, request user location and add marker
+          if ('geolocation' in navigator) {
+            navigator.geolocation.getCurrentPosition(
+              (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const maps = window.google.maps;
+                const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <circle cx="12" cy="12" r="11" fill="rgba(30,144,255,0.3)" />
+  <circle cx="12" cy="12" r="10" fill="#1e90ff" stroke="#ffffff" stroke-width="2" />
+</svg>`;
+                const url = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+                const icon = {
+                  url,
+                  scaledSize: new maps.Size(28, 28),
+                  anchor: new maps.Point(14, 14),
+                };
+                // Clear previous if any
+                if (userMarkerRef.current) {
+                  userMarkerRef.current.setMap(null);
+                  userMarkerRef.current = null;
+                }
+                userMarkerRef.current = new maps.Marker({
+                  position: { lat: latitude, lng: longitude },
+                  map: mapInstance,
+                  title: 'Vị trí của bạn',
+                  icon,
+                });
+              },
+              () => {
+                // Silently ignore if user denies; keep stations only
+              },
+              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+          }
 
                      // Add station markers only if we have stations from API
            if (stations.length > 0) {
@@ -308,6 +345,10 @@ export const Hero = () => {
       clearTimeout(fallbackTimer);
       if (mapInstanceRef.current) {
         mapInstanceRef.current = null;
+      }
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setMap(null);
+        userMarkerRef.current = null;
       }
     };
   }, [stations]);

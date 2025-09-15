@@ -177,12 +177,12 @@ const RentalDetailPage = () => {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4, bgcolor: '#000000', minHeight: '100vh' }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/rental-history')}
           sx={{ mb: 2, color: '#ff0000' }}
         >
           Quay lại
@@ -223,7 +223,7 @@ const RentalDetailPage = () => {
               Thông tin xe
             </Typography>
             
-            <Card sx={{ bgcolor: '#222', border: '1px solid #444', mb: 3 }}>
+            <Card sx={{ bgcolor: '#222', border: '1px solid #444', mb: 4 }}>
               <CardMedia
                 component="img"
                 height="200"
@@ -233,7 +233,10 @@ const RentalDetailPage = () => {
               />
               <CardContent>
                 <Typography variant="h6" sx={{ color: 'white', mb: 1, fontWeight: 'bold' }}>
-                  {rentalData.vehicle?.licensePlate}
+                  {rentalData.vehicle?.code || `${rentalData.vehicle?.make || ''} ${rentalData.vehicle?.model || ''}`.trim()}
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#ccc', mb: 1 }}>
+                  Biển số: <span style={{ color: 'white' }}>{rentalData.vehicle?.licensePlate || 'N/A'}</span>
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                   <Chip 
@@ -242,7 +245,7 @@ const RentalDetailPage = () => {
                     sx={{ bgcolor: '#ff0000', color: 'white' }}
                   />
                   <Chip 
-                    label={rentalData.vehicle?.stationName || 'Station'} 
+                    label={rentalData.vehicle?.station?.name || rentalData.vehicle?.stationName || 'Station'} 
                     size="small" 
                     sx={{ bgcolor: '#333', color: '#ccc' }}
                   />
@@ -322,7 +325,7 @@ const RentalDetailPage = () => {
       </Box>
 
       {/* Actions */}
-      <Box sx={{ mt: 3 }}>
+      <Box sx={{ mt: 8 }}>
           <Paper sx={{ 
             p: 3, 
             bgcolor: '#111111', 

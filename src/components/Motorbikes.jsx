@@ -22,7 +22,8 @@ import {
   ChevronRight,
   DirectionsCar
 } from '@mui/icons-material';
-import { getAllVehicles } from '../api.jsx';
+import { getAllVehicles, isAuthenticated } from '../api.jsx';
+import { AuthModal } from './AuthModal';
 
 // Motorbikes Section with Horizontal Slider
 export const Motorbikes = () => {
@@ -31,6 +32,8 @@ export const Motorbikes = () => {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authOpen, setAuthOpen] = useState(false);
   const scrollContainerRef = useRef(null);
   
   // Load vehicles from API
@@ -76,6 +79,12 @@ export const Motorbikes = () => {
   };
 
   const handleRentNow = (vehicle) => {
+    // Require login before proceeding
+    if (!isAuthenticated()) {
+      setAuthError('Vui lòng đăng nhập để thuê xe.');
+      setAuthOpen(true);
+      return;
+    }
     // Prepare vehicle data for checkout
     const vehicleData = {
       id: vehicle.vehicleId,
@@ -131,6 +140,13 @@ export const Motorbikes = () => {
         {error && (
           <Alert severity="error" sx={{ mb: 4, bgcolor: 'rgba(244,67,54,0.1)', color: '#f44336' }}>
             {error}
+          </Alert>
+        )}
+
+        {/* Auth Required Notice */}
+        {authError && (
+          <Alert severity="warning" sx={{ mb: 4, bgcolor: 'rgba(255,152,0,0.1)', color: '#ff9800' }}>
+            {authError}
           </Alert>
         )}
 
@@ -405,6 +421,19 @@ export const Motorbikes = () => {
         )}
         </Box>
       </Container>
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={authOpen}
+        onClose={() => {
+          setAuthOpen(false);
+          setAuthError('');
+        }}
+        onAuthSuccess={() => {
+          setAuthOpen(false);
+          setAuthError('');
+        }}
+      />
     </Box>
   );
 };

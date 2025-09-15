@@ -5,6 +5,7 @@ import Home from './components/Home.jsx';
 import CheckoutPage from './pages/CheckoutPage.jsx';
 import PaymentPage from './pages/PaymentPage.jsx';
 import RentalDetailPage from './pages/RentalDetailPage.jsx';
+import RentalHistoryPage from './pages/RentalHistoryPage.jsx';
 
 const theme = createTheme({
   palette: { 
@@ -40,6 +41,7 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/payment/:rentalId" element={<PaymentPage />} />
             <Route path="/rental/:id" element={<RentalDetailPage />} />
+            <Route path="/rental-history" element={<RentalHistoryPage />} />
           </Routes>
         </Router>
       </RentalProvider>
