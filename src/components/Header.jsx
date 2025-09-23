@@ -168,6 +168,23 @@ export const Header = () => {
             {/* Auth Buttons / User Menu */}
             {user ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {String(user.role).toUpperCase() === 'ADMIN' && (
+                  <Button 
+                    variant="outlined"
+                    onClick={() => navigate('/admin')}
+                    sx={{ 
+                      borderColor: '#ffd700',
+                      color: '#ffd700',
+                      fontFamily: 'Consolas, monospace',
+                      height: 32,
+                      px: 1.5,
+                      mr: 1,
+                      '&:hover': { borderColor: '#e6c200', bgcolor: 'rgba(255,215,0,0.1)' }
+                    }}
+                  >
+                    DASHBOARD
+                  </Button>
+                )}
                 <Button 
                   variant="outlined"
                   onClick={() => navigate('/rental-history')}
@@ -361,6 +378,22 @@ export const Header = () => {
               >
                 CONTACT
               </Button>
+              {user && String(user.role).toUpperCase() === 'ADMIN' && (
+                <Button 
+                  variant="outlined"
+                  onClick={() => { setMobileMenuOpen(false); navigate('/admin'); }}
+                  fullWidth
+                  sx={{ 
+                    borderColor: '#ffd700',
+                    color: '#ffd700',
+                    fontFamily: 'Consolas, monospace',
+                    justifyContent: 'flex-start',
+                    '&:hover': { borderColor: '#e6c200', bgcolor: 'rgba(255,215,0,0.1)' }
+                  }}
+                >
+                  DASHBOARD
+                </Button>
+              )}
               <Button 
                 variant="outlined"
                 onClick={() => { setMobileMenuOpen(false); navigate('/rental-history'); }}

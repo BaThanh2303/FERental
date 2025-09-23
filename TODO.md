@@ -6,7 +6,9 @@
 - [x] **COMPLETELY REDESIGNED** website với theme FERental (Electric Motorbike Rental)
 - [x] **DARK THEME** với màu đỏ (#ff0000) và nền đen (#000000)
 - [x] **HEADER COMPONENT** với logo, navigation, social media icons, và authentication
+- [x] **HEADER** thêm nút `RENTAL HISTORY` cạnh tên user (desktop + mobile)
 - [x] **HERO SECTION** với Google Maps integration và station selection
+- [x] **HERO** hiển thị vị trí người dùng bằng geolocation với marker xanh dương (vòng ngoài xanh nhạt lớn hơn 10%)
 - [x] **MOTORBIKES SECTION** với horizontal slider cho electric bikes
 - [x] **SERVICES SECTION** với 6 service cards (Annual Service, Winterization, etc.)
 - [x] **TESTIMONIALS SECTION** với customer feedback và avatars
@@ -39,6 +41,7 @@
   - [x] isAuthenticated() - Kiểm tra trạng thái đăng nhập
 - [x] **TOKEN MANAGEMENT** với localStorage và sessionStorage
 - [x] **USER PROFILE MENU** trong header với avatar
+- [x] **YÊU CẦU ĐĂNG NHẬP** khi bấm “RENT NOW” (mở AuthModal nếu chưa đăng nhập)
 
 ### 🗺️ **Google Maps Integration**
 - [x] **HERO SECTION** với Google Maps
@@ -46,6 +49,7 @@
 - [x] **VEHICLE DISPLAY** theo station được chọn
 - [x] **REAL-TIME DATA** từ backend API
 - [x] **ERROR HANDLING** cho API connection issues
+- [x] **USER LOCATION**: Lấy vị trí bằng `navigator.geolocation` và render marker riêng biệt
 
 ### 🚗 **Electric Motorbikes Display**
 - [x] **HORIZONTAL SLIDER** với navigation dots
@@ -85,6 +89,7 @@
 - [x] **HOVER EFFECTS** và transitions
 - [x] **LOADING STATES** và error handling
 - [x] **MODERN UI COMPONENTS** với Material-UI
+- [x] **RENTAL PAGES BACKGROUND** đồng nhất nền đen (#000000) cho `Checkout`, `Payment`, `Rental Detail`, `Rental History`
 
 ### 📱 **Responsive Design**
 - [x] **MOBILE-FIRST APPROACH** với breakpoints
@@ -101,6 +106,8 @@
 - [x] **STATIONS ENDPOINTS**:
   - [x] GET /api/stations
   - [x] GET /api/vehicles/station/{stationId}
+- [x] **RENTALS ENDPOINTS**:
+  - [x] GET /api/rentals/user/{id} (lịch sử thuê theo user)
 - [x] **ERROR HANDLING** với timeout và retry logic
 - [x] **CORS CONFIGURATION** và request headers
 
@@ -116,6 +123,7 @@ src/
 │   ├── Footer.jsx              # Contact info + subscription
 │   ├── Home.jsx                # Main orchestrator
 │   ├── AuthModal.jsx           # Login/Register modal
+│   ├── RentalHistoryPage.jsx   # Lịch sử thuê: đang thuê + lịch sử, xem chi tiết
 │   ├── APIConnectionTest.jsx   # API health check
 │   ├── SimpleAPITest.jsx       # Basic API testing
 │   ├── TestAPI.jsx             # Comprehensive API testing
@@ -134,6 +142,7 @@ src/
 - **Authentication**: ✅ **COMPLETE** - Login/Register với API integration
 - **Maps Integration**: ✅ **WORKING** - Google Maps với station selection
 - **API Integration**: ✅ **FUNCTIONAL** - Backend connection established
+- **Rental UX**: ✅ **UPDATED** - Lịch sử thuê, chi tiết thuê, yêu cầu đăng nhập khi thuê
 - **Responsive Design**: ✅ **COMPLETE** - Mobile và desktop optimized
 - **Testing Tools**: ✅ **READY** - API testing components available
 
@@ -148,6 +157,9 @@ src/
 - [ ] **MULTI-LANGUAGE** - Internationalization support
 - [ ] **PWA FEATURES** - Progressive Web App capabilities
 - [ ] **ANALYTICS** - Google Analytics integration
+ - [ ] **RENTAL HISTORY FILTERS** - Lọc theo trạng thái, thời gian; phân trang
+ - [ ] **RENTAL DETAIL ACTIONS** - Cho phép gia hạn thuê, hủy pending
+ - [ ] **MAP ENHANCEMENTS** - Tô màu đường đi từ user → trạm gần nhất
 
 ## 🔧 **Technical Stack**
 - **Frontend**: React 18.3.1 + Vite 7.1.2

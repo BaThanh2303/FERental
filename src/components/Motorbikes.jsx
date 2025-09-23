@@ -361,7 +361,6 @@ export const Motorbikes = () => {
                     textAlign: 'center',
                     fontFamily: 'Consolas, monospace'
                   }}>
-                    Available for Rent
                   </Typography>
                   
                   <Button 

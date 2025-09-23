@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Button, Alert, CircularProgress } from '@mui/material';
 import { getAllStations, getVehiclesInStation } from '../api.jsx';
+import { useRental } from '../context/RentalContext.jsx';
 
 // Hero Section with Google Maps
 export const Hero = () => {
@@ -12,6 +14,8 @@ export const Hero = () => {
   const [stations, setStations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const { setSelectedVehicle } = useRental();
 
   
 
@@ -383,6 +387,22 @@ export const Hero = () => {
     }
   };
 
+  const handleVehicleClick = (vehicle) => {
+    // Normalize vehicle data for checkout
+    const vehicleForCheckout = {
+      id: vehicle.id || vehicle.vehicleId,
+      name: vehicle.name || vehicle.code || vehicle.type || 'Vehicle',
+      image: vehicle.image || vehicle.imageUrl,
+      imageUrl: vehicle.imageUrl || vehicle.image,
+      licensePlate: vehicle.licensePlate,
+      make: vehicle.make || vehicle.type,
+      model: vehicle.model || '',
+      year: vehicle.year || ''
+    };
+    setSelectedVehicle(vehicleForCheckout);
+    navigate('/checkout', { state: { vehicle: vehicleForCheckout } });
+  };
+
   if (loading) {
     return (
       <Box sx={{ 
@@ -506,16 +526,37 @@ export const Hero = () => {
                         transition: 'transform 0.3s ease',
                         transform: `translateY(-${selectedVehicleIndex * 120}px)`
                       }}>
-                        {selectedStation.vehicles.map((vehicle) => (
-                          <Box key={vehicle.vehicleId} sx={{ 
-                            border: '1px solid #333', 
-                            borderRadius: 1, 
-                            p: 1.5, 
-                            bgcolor: '#1a1a1a',
-                            minHeight: '110px',
-                            display: 'flex',
-                            gap: 1
-                          }}>
+                        {selectedStation.vehicles.map((vehicle) => {
+                          const statusUpper = String(vehicle.status || '').toUpperCase();
+                          const isDisabled = ['RENTED', 'IN_USE', 'BUSY', 'UNAVAILABLE', 'OCCUPIED'].includes(statusUpper);
+                          return (
+                            <Box key={vehicle.vehicleId || vehicle.id} sx={{ 
+                              border: '1px solid #333', 
+                              borderRadius: 1, 
+                              p: 1.5, 
+                              bgcolor: '#1a1a1a',
+                              minHeight: '110px',
+                              display: 'flex',
+                              gap: 1,
+                              cursor: isDisabled ? 'not-allowed' : 'pointer',
+                              opacity: isDisabled ? 0.5 : 1,
+                              filter: isDisabled ? 'grayscale(100%)' : 'none'
+                            }} onClick={isDisabled ? undefined : () => handleVehicleClick(vehicle)} aria-disabled={isDisabled}>
+                              {isDisabled && (
+                                <Box sx={{
+                                  position: 'absolute',
+                                  transform: 'translateY(-12px) translateX(-12px)',
+                                  bgcolor: 'rgba(128,128,128,0.2)',
+                                  color: '#bbb',
+                                  fontSize: '11px',
+                                  px: 1,
+                                  py: 0.25,
+                                  borderRadius: 1,
+                                  border: '1px solid #444'
+                                }}>
+                                  Đang được thuê
+                                </Box>
+                              )}
                             {/* Vehicle Image */}
                             {vehicle.imageUrl && (
                               <Box sx={{
@@ -556,7 +597,7 @@ export const Hero = () => {
                               </Typography>
                             </Box>
                           </Box>
-                        ))}
+                          )})}
                       </Box>
                       
                       {/* Navigation Buttons */}

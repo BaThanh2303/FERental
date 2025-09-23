@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import { useRental } from '../context/RentalContext';
 import { getRentalPackages, createRentalPreorder, getCurrentUser, getUserId } from '../api.jsx';
+import { useUserInfo } from '../context/UserContext.jsx';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const CheckoutPage = () => {
   } = useRental();
 
   const [user, setUser] = useState(null);
+  const { cccdImageUrl } = useUserInfo();
 
   // Get vehicle data from location state or context
   const vehicleData = location.state?.vehicle || selectedVehicle;
@@ -138,6 +140,12 @@ const CheckoutPage = () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Guard: require CCCD uploaded
+      if (!cccdImageUrl) {
+        navigate('/upload-cccd', { state: { from: '/checkout' } });
+        return;
+      }
 
       const rentalData = {
         userId: user.id || user.userId,
