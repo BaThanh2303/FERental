@@ -44,7 +44,7 @@ export default function Vehicles() {
     { field: 'ownerName', headerName: 'Owner', width: 160 },
     { field: 'imageUrl', headerName: 'Image', flex: 1 },
     { field: 'actions', headerName: 'Actions', width: 180, sortable: false, renderCell: (params) => (
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 1.5 }}>
         <Button size="small" variant="outlined" onClick={() => onEdit(params.row)}>Edit</Button>
         <Button size="small" color="error" variant="outlined" onClick={() => onDelete(params.row)}>Delete</Button>
       </Box>

@@ -17,7 +17,7 @@ export const stationApi = {
 
 // Users
 export const userApi = {
-  list: (params) => list('/users', params),
+  list: (params) => list('/users/gmail-cccd', params),
   update: (id, data) => update('/users', id, data),
   remove: (id) => remove('/users', id),
 };

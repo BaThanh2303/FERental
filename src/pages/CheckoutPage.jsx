@@ -143,7 +143,10 @@ const CheckoutPage = () => {
 
       // Guard: require CCCD uploaded
       if (!cccdImageUrl) {
-        navigate('/upload-cccd', { state: { from: '/checkout' } });
+        setError('Bạn cần tải lên ảnh CCCD để tiếp tục thuê xe. Đang chuyển hướng...');
+        setTimeout(() => {
+          navigate('/upload-cccd', { state: { from: '/checkout' } });
+        }, 2000);
         return;
       }
 
@@ -371,6 +374,29 @@ const CheckoutPage = () => {
               </Box>
             </Box>
           )}
+
+          {/* CCCD Status */}
+          <Box sx={{ mt: 3, p: 2, bgcolor: '#222', borderRadius: 2, border: '1px solid #444' }}>
+            <Typography variant="h6" sx={{ color: '#ff0000', mb: 2, fontWeight: 'bold' }}>
+              Trạng thái xác thực
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              {cccdImageUrl ? (
+                <>
+                  <CheckCircle sx={{ color: '#4caf50' }} />
+                  <Typography variant="body1" sx={{ color: '#4caf50' }}>
+                    Đã tải lên CCCD
+                  </Typography>
+                </>
+              ) : (
+                <>
+                  <Alert severity="warning" sx={{ flex: 1, bgcolor: 'rgba(255,152,0,0.1)', color: '#ff9800' }}>
+                    Chưa tải lên CCCD. Bạn cần tải lên ảnh CCCD để tiếp tục.
+                  </Alert>
+                </>
+              )}
+            </Box>
+          </Box>
 
           {error && (
             <Alert severity="error" sx={{ mt: 2, bgcolor: 'rgba(244,67,54,0.1)', color: '#f44336' }}>

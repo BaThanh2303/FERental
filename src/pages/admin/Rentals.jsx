@@ -13,7 +13,16 @@ export default function Rentals() {
     setLoading(true);
     try {
       const data = await rentalApi.list(status ? { status } : undefined);
-      setRows(data.map(x => ({ id: x.id || x.rentalId, userId: x.userId, vehicleId: x.vehicleId, status: x.status, totalCost: x.totalCost })));
+      setRows(data.map(x => ({ 
+        id: x.id || x.rentalId, 
+        userName: x.user?.name || 'N/A', 
+        vehicleCode: x.vehicle?.code || 'N/A', 
+        packageName: x.rentalPackage?.name || 'N/A', 
+        startTime: x.startTime ? new Date(x.startTime).toLocaleString('vi-VN') : 'N/A',
+        endTime: x.endTime ? new Date(x.endTime).toLocaleString('vi-VN') : 'N/A',
+        status: x.status, 
+        totalCost: x.totalCost 
+      })));
       setTotal(data.reduce((s, x) => s + (Number(x.totalCost) || 0), 0));
     } finally { setLoading(false); }
   };
@@ -21,23 +30,26 @@ export default function Rentals() {
   useEffect(() => { load(); }, [status]);
 
   const columns = [
-    { field: 'id', headerName: 'ID', width: 120 },
-    { field: 'userId', headerName: 'User', width: 120 },
-    { field: 'vehicleId', headerName: 'Vehicle', width: 120 },
-    { field: 'status', headerName: 'Status', width: 140 },
-    { field: 'totalCost', headerName: 'Total', width: 140 },
+    { field: 'id', headerName: 'ID', width: 80 },
+    { field: 'userName', headerName: 'Tên người dùng', width: 150 },
+    { field: 'vehicleCode', headerName: 'Mã xe', width: 120 },
+    { field: 'packageName', headerName: 'Gói thuê', width: 120 },
+    { field: 'startTime', headerName: 'Thời gian bắt đầu', width: 180 },
+    { field: 'endTime', headerName: 'Thời gian kết thúc', width: 180 },
+    { field: 'status', headerName: 'Trạng thái', width: 120 },
+    { field: 'totalCost', headerName: 'Tổng tiền', width: 120 },
   ];
 
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
-        <TextField label="Status" select size="small" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ width: 220 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="PENDING">PENDING</MenuItem>
-          <MenuItem value="ACTIVE">ACTIVE</MenuItem>
-          <MenuItem value="COMPLETED">COMPLETED</MenuItem>
+        <TextField label="Trạng thái" select size="small" value={status} onChange={(e) => setStatus(e.target.value)} sx={{ width: 220 }}>
+          <MenuItem value="">Tất cả</MenuItem>
+          <MenuItem value="PENDING">Đang chờ</MenuItem>
+          <MenuItem value="ACTIVE">Đang hoạt động</MenuItem>
+          <MenuItem value="COMPLETED">Hoàn thành</MenuItem>
         </TextField>
-        <Box sx={{ color: 'white' }}>Total revenue: {total.toLocaleString('vi-VN')} VND</Box>
+        <Box sx={{ color: 'white' }}>Tổng doanh thu: {total.toLocaleString('vi-VN')} VND</Box>
       </Box>
       <GenericTable rows={rows} columns={columns} loading={loading} />
     </Box>

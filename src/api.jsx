@@ -446,6 +446,90 @@ export const getRentalDetails = async (rentalId) => {
 };
 
 /**
+ * Pickup vehicle using QR code
+ * @param {number} rentalId - Rental ID
+ * @param {number} vehicleId - Vehicle ID
+ * @param {Object} pickupData - Pickup data with QR code
+ * @returns {Promise<Object>} Pickup confirmation response
+ */
+export const pickupVehicle = async (rentalId, vehicleId, pickupData) => {
+  try {
+    console.log('Pickup API call:', { rentalId, vehicleId, pickupData });
+    console.log('API URL:', `${API_BASE_URL}/rentals/${rentalId}/pickup-vehicle`);
+    
+    const response = await fetchWithTimeout(`${API_BASE_URL}/rentals/${rentalId}/pickup-vehicle`, {
+      method: 'POST',
+      headers: createHeaders(true),
+      body: JSON.stringify(pickupData),
+    });
+
+    console.log('Pickup response status:', response.status);
+    console.log('Pickup response headers:', response.headers);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Pickup error response:', errorText);
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Failed to pickup vehicle:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw error; // Re-throw the original error to preserve details
+  }
+};
+
+/**
+ * Return vehicle using QR code
+ * @param {number} rentalId - Rental ID
+ * @param {Object} returnData - Return data with QR code
+ * @returns {Promise<Object>} Return confirmation response
+ */
+export const returnVehicle = async (rentalId, returnData) => {
+  try {
+    console.log('Return API call:', { rentalId, returnData });
+    const response = await fetchWithTimeout(`${API_BASE_URL}/rentals/${rentalId}/return-vehicle`, {
+      method: 'POST',
+      headers: createHeaders(true),
+      body: JSON.stringify(returnData),
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Failed to return vehicle:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw new Error(`Failed to return vehicle: ${error.message}`);
+  }
+};
+
+/**
+ * Get QR code for rental
+ * @param {number} rentalId - Rental ID
+ * @returns {Promise<Object>} QR code data
+ */
+export const getRentalQRCode = async (rentalId) => {
+  try {
+    const response = await fetchWithTimeout(`${API_BASE_URL}/rentals/${rentalId}/qr-code`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error('Failed to get QR code:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw new Error(`Failed to get QR code: ${error.message}`);
+  }
+};
+
+/**
  * Get rentals by user ID
  * @param {number} userId - User ID
  * @returns {Promise<Array>} List of rentals

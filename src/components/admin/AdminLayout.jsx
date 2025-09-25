@@ -1,15 +1,15 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
 import Sidebar from './Sidebar.jsx';
-import { logoutUser } from '../../api.jsx';
 import { useUserInfo } from '../../context/UserContext.jsx';
 
 export default function AdminLayout() {
   const { user } = useUserInfo();
-  const onLogout = () => {
-    logoutUser();
-    window.location.assign('/login');
+  const navigate = useNavigate();
+  
+  const onBackHome = () => {
+    navigate('/');
   };
 
   return (
@@ -20,7 +20,7 @@ export default function AdminLayout() {
           <Toolbar>
             <Typography variant="h6" sx={{ flex: 1 }}>Admin Dashboard</Typography>
             <Typography variant="body2" sx={{ mr: 2 }}>{user?.name} ({user?.role})</Typography>
-            <Button color="inherit" onClick={onLogout}>Logout</Button>
+            <Button color="inherit" onClick={onBackHome}>Back Home</Button>
           </Toolbar>
         </AppBar>
         <Box sx={{ p: 2 }}>

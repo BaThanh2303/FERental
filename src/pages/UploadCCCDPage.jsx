@@ -28,10 +28,11 @@ export default function UploadCCCDPage() {
       <Button onClick={() => navigate(-1)} sx={{ mb: 2, color: '#ff0000' }}>Quay lại</Button>
       <Paper sx={{ p: 3, bgcolor: '#111', border: '1px solid #333', borderRadius: 2 }}>
         <Typography variant="h5" sx={{ color: 'white', fontWeight: 'bold', mb: 2 }}>
-          Xác thực CCCD để tiếp tục
+          Xác thực CCCD để tiếp tục thuê xe
         </Typography>
         <Typography variant="body2" sx={{ color: '#ccc', mb: 3 }}>
-          Vui lòng tải lên ảnh CCCD của bạn. Thông tin sẽ được bảo mật và chỉ dùng để xác thực.
+          Để đảm bảo an toàn và tuân thủ quy định, bạn cần tải lên ảnh CCCD trước khi thuê xe. 
+          Thông tin sẽ được bảo mật và chỉ dùng để xác thực danh tính.
         </Typography>
         <CCCDUpload userId={userId} onSuccess={onSuccess} />
         <Box sx={{ mt: 3 }}>

@@ -28,10 +28,15 @@ import {
   Schedule,
   AttachMoney,
   Warning,
-  Done
+  Done,
+  QrCodeScanner
 } from '@mui/icons-material';
 import { useRental } from '../context/RentalContext';
-import { getRentalDetails, returnRentalVehicle } from '../api.jsx';
+import { getRentalDetails, pickupVehicle, returnVehicle } from '../api.jsx';
+import QRScannerV2 from '../components/QRScannerV2.jsx';
+import PickupConfirmation from '../components/PickupConfirmation.jsx';
+import ReturnConfirmDialog from '../components/ReturnConfirmDialog.jsx';
+import RentalStatusTracker from '../components/RentalStatusTracker.jsx';
 
 const RentalDetailPage = () => {
   const { id } = useParams();
@@ -46,6 +51,10 @@ const RentalDetailPage = () => {
   } = useRental();
 
   const [rentalData, setRentalData] = useState(null);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [showPickupConfirmation, setShowPickupConfirmation] = useState(false);
+  const [showReturnConfirmDialog, setShowReturnConfirmDialog] = useState(false);
+  const [scannedData, setScannedData] = useState(null);
 
   useEffect(() => {
     if (!id) {
@@ -75,17 +84,176 @@ const RentalDetailPage = () => {
     }
   };
 
-  const handleReturnVehicle = async () => {
+
+  // QR Code handlers
+  const handleScanQR = () => {
+    setShowQRScanner(true);
+  };
+
+  const handleQRScan = (data) => {
+    setScannedData(data);
+    setShowQRScanner(false);
+    
+    console.log('QR Scan data:', data, 'Rental status:', rentalData.status);
+    console.log('Rental data:', rentalData);
+    
+    // Validate QR code type based on rental status
+    if (rentalData.status === 'PAID') {
+      // Check if it's a vehicle QR for pickup
+      if (data.startsWith('VEHICLE_') || (data.startsWith('{') && data.includes('vehicle_pickup'))) {
+        // Validate if the scanned vehicle matches the rented vehicle
+        const scannedVehicleId = data.replace('VEHICLE_', '');
+        const rentedVehicleId = rentalData.vehicle?.id || rentalData.vehicle?.vehicleId;
+        
+        console.log('Scanned vehicle ID:', scannedVehicleId);
+        console.log('Rented vehicle ID:', rentedVehicleId);
+        
+        if (scannedVehicleId === String(rentedVehicleId)) {
+          setScannedData(data);
+          setShowPickupConfirmation(true);
+        } else {
+          alert(`❌ SAI XE!\n\nBạn đã đặt xe: ${rentalData.vehicle?.name || rentalData.vehicle?.code} (ID: ${rentedVehicleId})\nĐang quét xe: VEHICLE_${scannedVehicleId}\n\nVui lòng quét QR code đúng xe hoặc upload lại ảnh QR.`);
+        }
+      } else {
+        alert('Vui lòng quét QR code trên xe để lấy xe');
+      }
+    } else if (rentalData.status === 'ACTIVE') {
+      // Check if it's a station QR for return
+      if (data.startsWith('STATION_') || (data.startsWith('{') && data.includes('vehicle_return'))) {
+        // Extract station ID from QR code
+        const scannedStationId = data.replace('STATION_', '');
+        
+        console.log('Scanned station ID for return:', scannedStationId);
+        console.log('Vehicle will be returned to station:', scannedStationId);
+        
+        // Allow return to any station - store the scanned station ID
+        setScannedData(data); // Store the full QR data including station ID
+        setShowReturnConfirmDialog(true); // Show confirmation dialog first
+      } else {
+        alert('Vui lòng quét QR code tại trạm để trả xe');
+      }
+    } else {
+      // For other statuses, allow any QR code for demo
+      console.log('Allowing QR scan for status:', rentalData.status);
+      if (data.startsWith('VEHICLE_') || data.startsWith('STATION_')) {
+        if (rentalData.status === 'PAID') {
+          // Also validate vehicle for demo mode
+          const scannedVehicleId = data.replace('VEHICLE_', '');
+          const rentedVehicleId = rentalData.vehicle?.id || rentalData.vehicle?.vehicleId;
+          
+          if (scannedVehicleId === String(rentedVehicleId)) {
+            setScannedData(data);
+            setShowPickupConfirmation(true);
+          } else {
+            alert(`❌ SAI XE!\n\nBạn đã đặt xe: ${rentalData.vehicle?.name || rentalData.vehicle?.code} (ID: ${rentedVehicleId})\nĐang quét xe: VEHICLE_${scannedVehicleId}\n\nVui lòng quét QR code đúng xe hoặc upload lại ảnh QR.`);
+          }
+        } else {
+          setShowReturnConfirmDialog(true);
+        }
+      }
+    }
+  };
+
+  const handlePickupConfirm = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Get rental ID (could be id or rentalId)
+      const rentalId = rentalData.id || rentalData.rentalId || id;
+      const vehicleId = rentalData.vehicle?.id || rentalData.vehicle?.vehicleId;
+      
+      console.log('Pickup data:', { rentalId, vehicleId, rentalData });
+      console.log('Current rental status:', rentalData.status);
+      console.log('Scanned QR data:', scannedData);
+      console.log('Rental ID type:', typeof rentalId);
+      console.log('Vehicle ID type:', typeof vehicleId);
+      
+      if (!rentalId) {
+        throw new Error('Không tìm thấy ID thuê xe');
+      }
+      
+      if (!vehicleId) {
+        throw new Error('Không tìm thấy ID xe');
+      }
+
+      // Validate rental status
+      if (rentalData.status !== 'PAID') {
+        throw new Error(`Không thể lấy xe. Trạng thái hiện tại: ${rentalData.status}. Cần trạng thái PAID.`);
+      }
+      
+      const pickupData = {
+        qrData: scannedData,
+        vehicleId: vehicleId, // Add vehicleId to request body
+        latitude: 0, // Get from geolocation
+        longitude: 0
+      };
+      
+      console.log('Sending pickup data:', pickupData);
+      
+      const result = await pickupVehicle(rentalId, vehicleId, pickupData);
+      console.log('Pickup result:', result);
+      
+      setRentalData(result.rental);
+      setCurrentRental(result.rental);
+      setShowPickupConfirmation(false);
+      
+    } catch (error) {
+      console.error('Pickup error details:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle confirmation from dialog - directly execute return
+  const handleReturnDialogConfirm = async () => {
+    setShowReturnConfirmDialog(false);
+    await handleReturnConfirm(); // Directly execute return
+  };
+
+  const handleReturnDialogCancel = () => {
+    setShowReturnConfirmDialog(false);
+    setScannedData(null); // Clear scanned data
+  };
+
+  const handleReturnConfirm = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const returnResponse = await returnRentalVehicle(id);
-      setCurrentRental(returnResponse);
-      setRentalData(returnResponse);
+      // Get rental ID (could be id or rentalId)
+      const rentalId = rentalData.id || rentalData.rentalId || id;
       
-      // Show success message
-      alert('Trả xe thành công! Cảm ơn bạn đã sử dụng dịch vụ.');
+      // Get station ID from scanned QR code instead of rental data
+      const scannedStationId = scannedData ? scannedData.replace('STATION_', '') : null;
+      
+      console.log('Return data:', { 
+        rentalId, 
+        scannedStationId, 
+        scannedData, 
+        rentalData 
+      });
+      
+      if (!rentalId) {
+        throw new Error('Không tìm thấy ID thuê xe');
+      }
+      
+      if (!scannedStationId) {
+        throw new Error('Không tìm thấy ID trạm từ QR code');
+      }
+      
+      const returnData = {
+        stationId: parseInt(scannedStationId), // Use station ID from QR code
+        qrData: scannedData,
+        latitude: 0, // Get from geolocation
+        longitude: 0
+      };
+      
+      const result = await returnVehicle(rentalId, returnData);
+      setRentalData(result.rental);
+      setCurrentRental(result.rental);
+      
     } catch (error) {
       setError(error.message);
     } finally {
@@ -100,9 +268,37 @@ const RentalDetailPage = () => {
     }).format(price);
   };
 
-  const formatDateTime = (dateTimeString) => {
-    if (!dateTimeString) return 'Chưa xác định';
+  const formatDateTime = (dateTimeString, status = null) => {
+    if (!dateTimeString) {
+      // Hiển thị thông báo phù hợp theo status
+      if (status === 'PAID') {
+        return 'Chưa bắt đầu (chờ quét QR lấy xe)';
+      } else if (status === 'ACTIVE') {
+        return 'Đang sử dụng';
+      } else {
+        return 'Chưa xác định';
+      }
+    }
     return new Date(dateTimeString).toLocaleString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Tính thời gian kết thúc dựa theo gói thuê
+  const calculateEndTime = () => {
+    if (!rentalData.startTime || !rentalData.rentalPackage?.duration) {
+      return null;
+    }
+    
+    const startTime = new Date(rentalData.startTime);
+    const durationHours = rentalData.rentalPackage.duration;
+    const endTime = new Date(startTime.getTime() + (durationHours * 60 * 60 * 1000));
+    
+    return endTime.toLocaleString('vi-VN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -193,7 +389,7 @@ const RentalDetailPage = () => {
               Chi tiết thuê xe
             </Typography>
             <Typography variant="body1" sx={{ color: '#ccc', mt: 1 }}>
-              Mã đặt xe: #{rentalData.id}
+              Mã đặt xe: #{rentalData.rentalId}
             </Typography>
           </Box>
           <Chip
@@ -208,6 +404,12 @@ const RentalDetailPage = () => {
           />
         </Box>
       </Box>
+
+      {/* Rental Status Tracker */}
+      <RentalStatusTracker 
+        rental={rentalData}
+        onScanQR={handleScanQR}
+      />
 
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, gap: 3 }}>
         {/* Vehicle Information */}
@@ -290,9 +492,15 @@ const RentalDetailPage = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary="Thời gian bắt đầu"
-                  secondary={formatDateTime(rentalData.startTime)}
+                  secondary={
+                    rentalData.status === 'PAID' && !rentalData.startTime 
+                      ? 'Chưa bắt đầu (chờ quét QR lấy xe)' 
+                      : formatDateTime(rentalData.startTime, rentalData.status)
+                  }
                   primaryTypographyProps={{ color: 'white', fontWeight: 'bold' }}
-                  secondaryTypographyProps={{ color: '#ccc' }}
+                  secondaryTypographyProps={{ 
+                    color: rentalData.status === 'PAID' && !rentalData.startTime ? '#ff9800' : '#ccc' 
+                  }}
                 />
               </ListItem>
               
@@ -302,9 +510,15 @@ const RentalDetailPage = () => {
                 </ListItemIcon>
                 <ListItemText
                   primary="Thời gian kết thúc"
-                  secondary={formatDateTime(rentalData.endTime)}
+                  secondary={
+                    rentalData.status === 'ACTIVE' && !rentalData.endTime 
+                      ? calculateEndTime() || 'Chưa kết thúc (đang sử dụng)'
+                      : formatDateTime(rentalData.endTime, rentalData.status)
+                  }
                   primaryTypographyProps={{ color: 'white', fontWeight: 'bold' }}
-                  secondaryTypographyProps={{ color: '#ccc' }}
+                  secondaryTypographyProps={{ 
+                    color: rentalData.status === 'ACTIVE' && !rentalData.endTime ? '#2196f3' : '#ccc' 
+                  }}
                 />
               </ListItem>
               
@@ -320,6 +534,18 @@ const RentalDetailPage = () => {
                 />
               </ListItem>
             </List>
+
+            {/* Thông tin thời gian dự kiến cho status PAID */}
+            {rentalData.status === 'PAID' && rentalData.rentalPackage && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: '#222', borderRadius: 1, border: '1px solid #444' }}>
+                <Typography variant="body2" sx={{ color: '#ff9800', fontWeight: 'bold', mb: 1 }}>
+                  ⏰ Thời gian sử dụng dự kiến: {rentalData.rentalPackage.duration} giờ
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#aaa' }}>
+                  Thời gian sẽ bắt đầu tính từ khi bạn quét QR lấy xe tại trạm
+                </Typography>
+              </Box>
+            )}
           </Paper>
         </Box>
       </Box>
@@ -343,22 +569,6 @@ const RentalDetailPage = () => {
             )}
 
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-              {rentalData.status === 'ACTIVE' && (
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleReturnVehicle}
-                  startIcon={<DirectionsCar />}
-                  sx={{
-                    bgcolor: '#ff0000',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    '&:hover': { bgcolor: '#cc0000' }
-                  }}
-                >
-                  Trả xe
-                </Button>
-              )}
 
               {rentalData.status === 'PENDING_PAYMENT' && (
                 <Button
@@ -416,6 +626,36 @@ const RentalDetailPage = () => {
             )}
           </Paper>
       </Box>
+
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <QRScannerV2
+          onScan={handleQRScan}
+          onClose={() => setShowQRScanner(false)}
+          title={rentalData.status === 'PAID' ? 'Quét QR để lấy xe' : 'Quét QR để trả xe'}
+        />
+      )}
+
+      {/* Pickup Confirmation Modal */}
+      {showPickupConfirmation && (
+        <PickupConfirmation
+          rental={rentalData}
+          onConfirm={handlePickupConfirm}
+          onCancel={() => setShowPickupConfirmation(false)}
+          loading={loading}
+        />
+      )}
+
+      {/* Return Confirmation Dialog */}
+      <ReturnConfirmDialog
+        open={showReturnConfirmDialog}
+        onClose={handleReturnDialogCancel}
+        onConfirm={handleReturnDialogConfirm}
+        loading={loading}
+        rental={rentalData}
+      />
+
+
     </Container>
   );
 };

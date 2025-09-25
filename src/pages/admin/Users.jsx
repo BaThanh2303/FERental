@@ -14,8 +14,16 @@ export default function Users() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await userApi.list();
-      setRows(data.map(x => ({ id: x.id, name: x.name, email: x.email, role: x.role })));
+      const response = await userApi.list();
+      // Handle API response structure: { users: [...], totalUsers: 3, success: true, message: "..." }
+      const data = response.users || response;
+      setRows(data.map(x => ({ 
+        id: x.userId || x.id, 
+        name: x.name, 
+        email: x.email, 
+        cccdImageUrl: x.cccdImageUrl,
+        role: x.role || 'USER' 
+      })));
     } finally { setLoading(false); }
   };
 
@@ -29,13 +37,50 @@ export default function Users() {
   };
 
   const columns = [
-    { field: 'name', headerName: 'Name', flex: 1 },
+    { field: 'name', headerName: 'Tên', flex: 1 },
     { field: 'email', headerName: 'Email', flex: 1 },
-    { field: 'role', headerName: 'Role', width: 150 },
-    { field: 'actions', headerName: 'Actions', width: 180, sortable: false, renderCell: (params) => (
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button size="small" variant="outlined" onClick={() => onEdit(params.row)}>Edit</Button>
-        <Button size="small" color="error" variant="outlined" onClick={() => onDelete(params.row)}>Delete</Button>
+    { 
+      field: 'cccdImageUrl', 
+      headerName: 'CCCD', 
+      width: 120, 
+      sortable: false,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {params.value ? (
+            <img 
+              src={params.value.startsWith('http') ? params.value : `http://localhost:8080${params.value}`} 
+              alt="CCCD" 
+              style={{ 
+                width: 60, 
+                height: 40, 
+                objectFit: 'cover',
+                borderRadius: 4,
+                border: '1px solid #333'
+              }} 
+            />
+          ) : (
+            <Box sx={{ 
+              width: 60, 
+              height: 40, 
+              bgcolor: '#333', 
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#666',
+              fontSize: '12px'
+            }}>
+              Chưa có
+            </Box>
+          )}
+        </Box>
+      )
+    },
+    { field: 'role', headerName: 'Vai trò', width: 120 },
+    { field: 'actions', headerName: 'Thao tác', width: 180, sortable: false, renderCell: (params) => (
+      <Box sx={{ display: 'flex', gap: 1,mt: 1.5 }}>
+        <Button size="small" variant="outlined" onClick={() => onEdit(params.row)}>Sửa</Button>
+        <Button size="small" color="error" variant="outlined" onClick={() => onDelete(params.row)}>Xóa</Button>
       </Box>
     ) }
   ];
@@ -43,13 +88,13 @@ export default function Users() {
   return (
     <Box>
       <GenericTable rows={rows} columns={columns} loading={loading} />
-      <GenericModal open={open} title="Edit User" onClose={() => setOpen(false)} onSubmit={onSubmit}>
+      <GenericModal open={open} title="Chỉnh sửa người dùng" onClose={() => setOpen(false)} onSubmit={onSubmit}>
         <Box sx={{ display: 'grid', gap: 2 }}>
-          <TextField label="Name" value={form.name} disabled fullWidth />
+          <TextField label="Tên" value={form.name} disabled fullWidth />
           <TextField label="Email" value={form.email} disabled fullWidth />
-          <TextField label="Role" select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-            <MenuItem value="USER">USER</MenuItem>
-            <MenuItem value="ADMIN">ADMIN</MenuItem>
+          <TextField label="Vai trò" select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+            <MenuItem value="USER">Người dùng</MenuItem>
+            <MenuItem value="ADMIN">Quản trị viên</MenuItem>
           </TextField>
         </Box>
       </GenericModal>
