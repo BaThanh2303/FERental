@@ -616,7 +616,7 @@ export const Hero = () => {
                               height: '30px',
                               bgcolor: '#ff0000',
                               color: 'white',
-                              borderRadius: '20px 20px 0 0',
+                              borderRadius: '20px 20px 20px 20px',
                               '&:hover': { bgcolor: '#cc0000' },
                               '&:disabled': { bgcolor: '#666', color: '#999' }
                             }}
@@ -637,7 +637,7 @@ export const Hero = () => {
                               height: '30px',
                               bgcolor: '#ff0000',
                               color: 'white',
-                              borderRadius: '0 0 20px 20px',
+                              borderRadius: '20px 20px 20px 20px',
                               '&:hover': { bgcolor: '#cc0000' },
                               '&:disabled': { bgcolor: '#666', color: '#999' }
                             }}

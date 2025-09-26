@@ -59,7 +59,7 @@ export default function Vehicles() {
       <GenericTable rows={rows} columns={columns} loading={loading} />
       <GenericModal open={open} title={editing ? 'Edit Vehicle' : 'Add Vehicle'} onClose={() => setOpen(false)} onSubmit={onSubmit}>
         <Box sx={{ display: 'grid', gap: 2 }}>
-          <TextField label="Image URL / Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+          <TextField label="Name" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
           <TextField label="Type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} />
           <TextField label="Battery Level" value={form.batteryLevel} onChange={(e) => setForm({ ...form, batteryLevel: e.target.value })} />
           <TextField label="Status" select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>

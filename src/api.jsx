@@ -49,18 +49,43 @@ const handleResponse = async (response) => {
     const responseClone = response.clone();
     
     try {
-      // Try to read as JSON first
-      const errorData = await response.json();
-      console.error('API Error response:', errorData);
-      errorMessage = errorData.message || errorMessage;
+      // Check if response has content
+      const contentLength = response.headers.get('content-length');
+      const contentType = response.headers.get('content-type');
+      
+      console.log('Error response headers:', {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: contentType,
+        contentLength: contentLength
+      });
+      
+      // Only try to parse if we have content
+      if (contentLength && parseInt(contentLength) > 0) {
+        if (contentType && contentType.includes('application/json')) {
+          // Try to read as JSON first
+          const errorData = await response.json();
+          console.error('API Error response:', errorData);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } else {
+          // Try to read as text
+          const errorText = await responseClone.text();
+          console.error('Error response text:', errorText);
+          if (errorText && errorText.trim()) {
+            errorMessage = `${errorMessage} - ${errorText}`;
+          }
+        }
+      } else {
+        console.log('Empty response body');
+      }
     } catch (parseError) {
-      console.error('Failed to parse error response as JSON:', parseError);
+      console.error('Failed to parse error response:', parseError);
       
       try {
-        // Try to read as text from cloned response
+        // Last resort: try to read as text from cloned response
         const errorText = await responseClone.text();
-        console.error('Error response text:', errorText);
-        if (errorText) {
+        console.error('Error response text (fallback):', errorText);
+        if (errorText && errorText.trim()) {
           errorMessage = `${errorMessage} - ${errorText}`;
         }
       } catch (textError) {
@@ -334,6 +359,62 @@ export const getAllVehicles = async () => {
 };
 
 /**
+ * Get vehicle details by ID
+ * @param {number} vehicleId - Vehicle ID
+ * @returns {Promise<Object>} Vehicle details
+ */
+export const getVehicleDetails = async (vehicleId) => {
+  try {
+    console.log('Fetching vehicle details for ID:', vehicleId);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/vehicles/${vehicleId}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    const result = await handleResponse(response);
+    console.log('Vehicle details received:', result);
+    return result;
+  } catch (error) {
+    console.error('Failed to get vehicle details:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw new Error(`Failed to get vehicle details: ${error.message}`);
+  }
+};
+
+/**
+ * Create payment record
+ * @param {Object} paymentData - Payment data
+ * @param {number} paymentData.rentalId - Rental ID
+ * @param {number} paymentData.amount - Payment amount
+ * @param {string} paymentData.currency - Currency
+ * @param {string} paymentData.paymentMethod - Payment method
+ * @param {string} paymentData.status - Payment status
+ * @returns {Promise<Object>} Payment response
+ */
+export const createPayment = async (paymentData) => {
+  try {
+    console.log('Creating payment:', paymentData);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/payments`, {
+      method: 'POST',
+      headers: createHeaders(true),
+      body: JSON.stringify(paymentData),
+    });
+
+    const result = await handleResponse(response);
+    console.log('Payment created:', result);
+    return result;
+  } catch (error) {
+    console.error('Failed to create payment:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw new Error(`Failed to create payment: ${error.message}`);
+  }
+};
+
+/**
  * Get stations with vehicle counts (new API)
  * @returns {Promise<Array>} List of stations with totalVehicles
  */
@@ -442,6 +523,29 @@ export const getRentalDetails = async (rentalId) => {
       throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
     }
     throw new Error(`Failed to fetch rental details: ${error.message}`);
+  }
+};
+
+/**
+ * Get payment details by payment ID
+ * @param {number} paymentId - Payment ID (same as rental ID in this case)
+ * @returns {Promise<Object|null>} Payment details or null if not found
+ */
+export const getRentalPayment = async (rentalId) => {
+  try {
+    console.log('Fetching payment details for rental:', rentalId);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/payments/${rentalId}`, {
+      method: 'GET',
+      headers: createHeaders(true),
+    });
+
+    const result = await handleResponse(response);
+    console.log('Payment details received:', result);
+    return result;
+  } catch (error) {
+    console.log('Payment details not found for rental:', rentalId, error.message);
+    // Return null instead of throwing error - payment details are optional
+    return null;
   }
 };
 
@@ -572,6 +676,81 @@ export const returnRentalVehicle = async (rentalId) => {
       throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
     }
     throw new Error(`Failed to return rental vehicle: ${error.message}`);
+  }
+};
+
+/**
+ * Create VNPay payment
+ * @param {Object} paymentData - Payment data
+ * @param {number} paymentData.rentalId - Rental ID
+ * @param {number} paymentData.amount - Payment amount
+ * @param {string} paymentData.orderDescription - Order description
+ * @param {string} paymentData.returnUrl - Return URL after payment
+ * @param {string} paymentData.cancelUrl - Cancel URL
+ * @returns {Promise<Object>} VNPay payment response
+ */
+export const createVNPayPayment = async (paymentData) => {
+  try {
+    console.log('Creating VNPay payment:', paymentData);
+    console.log('API URL:', `${API_BASE_URL}/payments/vnpay/create`);
+    console.log('Headers:', createHeaders(true));
+    
+    const response = await fetchWithTimeout(`${API_BASE_URL}/payments/vnpay/create`, {
+      method: 'POST',
+      headers: createHeaders(true),
+      body: JSON.stringify(paymentData),
+    });
+
+    console.log('VNPay API Response status:', response.status);
+    console.log('VNPay API Response headers:', response.headers);
+
+    const result = await handleResponse(response);
+    console.log('VNPay payment created:', result);
+    return result;
+  } catch (error) {
+    console.error('Failed to create VNPay payment:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      paymentData: paymentData
+    });
+    
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    
+    // Provide more specific error messages
+    if (error.message.includes('500')) {
+      throw new Error(`Lỗi server (500): ${error.message}. Vui lòng kiểm tra backend logs hoặc liên hệ admin.`);
+    }
+    
+    throw new Error(`Failed to create VNPay payment: ${error.message}`);
+  }
+};
+
+/**
+ * Handle VNPay payment return
+ * @param {Object} returnData - Return data from VNPay
+ * @returns {Promise<Object>} Payment return result
+ */
+export const handleVNPayReturn = async (returnData) => {
+  try {
+    console.log('Handling VNPay return:', returnData);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/payments/vnpay/return-callback`, {
+      method: 'POST',
+      headers: createHeaders(true),
+      body: JSON.stringify(returnData),
+    });
+
+    const result = await handleResponse(response);
+    console.log('VNPay return handled:', result);
+    return result;
+  } catch (error) {
+    console.error('Failed to handle VNPay return:', error);
+    if (error.message.includes('Failed to fetch')) {
+      throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc liên hệ admin.');
+    }
+    throw new Error(`Failed to handle VNPay return: ${error.message}`);
   }
 };
 

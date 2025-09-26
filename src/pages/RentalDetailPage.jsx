@@ -158,7 +158,7 @@ const RentalDetailPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Get rental ID (could be id or rentalId)
       const rentalId = rentalData.id || rentalData.rentalId || id;
       const vehicleId = rentalData.vehicle?.id || rentalData.vehicle?.vehicleId;
@@ -309,7 +309,7 @@ const RentalDetailPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PENDING_PAYMENT':
+      case 'PENDING':
         return '#ff9800';
       case 'ACTIVE':
         return '#4caf50';
@@ -324,7 +324,7 @@ const RentalDetailPage = () => {
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'PENDING_PAYMENT':
+      case 'PENDING':
         return 'Chờ thanh toán';
       case 'ACTIVE':
         return 'Đang thuê';
@@ -339,7 +339,7 @@ const RentalDetailPage = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'PENDING_PAYMENT':
+      case 'PENDING':
         return <Schedule sx={{ color: getStatusColor(status) }} />;
       case 'ACTIVE':
         return <CheckCircle sx={{ color: getStatusColor(status) }} />;
@@ -570,7 +570,7 @@ const RentalDetailPage = () => {
 
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
 
-              {rentalData.status === 'PENDING_PAYMENT' && (
+              {rentalData.status === 'PENDING' && (
                 <Button
                   variant="contained"
                   size="large"
